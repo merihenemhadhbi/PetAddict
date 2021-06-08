@@ -49,10 +49,11 @@ class Adoption
     private $updatedBy;
 
     
+    
     /**
-     * @ORM\Column(type="boolean", nullable=true)
+     * @ORM\Column(type="string", length=255)
      */
-    private $active;
+    private $animal;
 
     public function getId(): ?int
     {
@@ -133,19 +134,6 @@ class Adoption
 
   
 
-    public function getActive(): ?bool
-    {
-        return $this->active;
-    }
-
-    public function setActive(?bool $active): self
-    {
-        $this->active = $active;
-
-        return $this;
-    }
-
-
     /** @ORM\PrePersist */
     public function prePersist()
     {
@@ -158,5 +146,17 @@ class Adoption
     {
         $this->updatedAt = new DateTime();
         $this->updatedBy = "admin";
+    }
+
+    public function getAnimal(): ?string
+    {
+        return $this->animal;
+    }
+
+    public function setAnimal(string $animal): self
+    {
+        $this->animal = $animal;
+
+        return $this;
     }
 }

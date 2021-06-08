@@ -18,7 +18,7 @@ class AdoptionController extends AbstractFOSRestController
     }
 
     /**
-     * @Route("/adoption", name="adoption_list", methods = "GET")
+     * @Route("/api/adoption", name="adoption_list", methods = "GET")
      */
     public function findAll(Request $requst): Response
     {
@@ -40,7 +40,7 @@ class AdoptionController extends AbstractFOSRestController
     }
 
     /**
-     * @Route("/adoption/{id}", name="get_adoption" , methods = "GET")
+     * @Route("/api/adoption/{id}", name="get_adoption" , methods = "GET")
      */
     public function findOne($id): Response
     {
@@ -51,7 +51,7 @@ class AdoptionController extends AbstractFOSRestController
     }
 
     /**
-     * @Route("/adoption/{id}", name="delete_adoption" , methods = "DELETE")
+     * @Route("/api/adoption/{id}", name="delete_adoption" , methods = "DELETE")
      */
     public function delete($id): Response
     {
@@ -65,7 +65,7 @@ class AdoptionController extends AbstractFOSRestController
     }
 
     /**
-     * @Route("/adoption/{id}", name="update_adoption" , methods = "PUT")
+     * @Route("/api/adoption/{id}", name="update_adoption" , methods = "PUT")
      */
     public function update($id, Request $request): Response
     {
@@ -82,7 +82,7 @@ class AdoptionController extends AbstractFOSRestController
     }
 
     /**
-     * @Route("/adoption", name="create_adoption" , methods = "POST")
+     * @Route("/api/adoption", name="create_adoption" , methods = "POST")
      */
     public function create(Request $request): Response
     {
@@ -101,6 +101,7 @@ class AdoptionController extends AbstractFOSRestController
     {
         $adoption->setTitle($data['title']);
         $adoption->setDescription($data['description']);
+        $adoption->setAnimal($data['animal']);
         return $adoption;
     }
 }
