@@ -46,7 +46,7 @@ class AdoptionRepository extends ServiceEntityRepository
         }
         $offset = ($page - 1) * $size;
         return $this->createQueryBuilder('a')
-            ->orderBy('a.createdAt', 'DESC')
+            ->orderBy('a.id', 'DESC')
             ->setFirstResult($offset)
             ->setMaxResults($size)
             ->getQuery()

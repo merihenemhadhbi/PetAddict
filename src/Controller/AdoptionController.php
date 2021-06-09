@@ -56,6 +56,16 @@ class AdoptionController extends AbstractFOSRestController
         return $this->json($adoptions, Response::HTTP_OK);
     }
 
+
+    /**
+     * @Route("/api/adoptions/count", name="count_adoption" , methods = "GET")
+     */
+    public function count(): Response
+    {
+        $size = $this->adoptionRepository->count([]);
+        return $this->json($size, Response::HTTP_OK);
+    }
+
     /**
      * @Route("/api/adoption/{id}", name="get_adoption" , methods = "GET")
      */
