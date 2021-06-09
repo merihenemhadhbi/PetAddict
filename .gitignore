@@ -8,6 +8,7 @@
 /public/bundles/
 /var/
 /vendor/
+/migrations/
 ###< symfony/framework-bundle ###
 
 ###> symfony/web-server-bundle ###
@@ -15,5 +16,5 @@
 ###< symfony/web-server-bundle ###
 
 ###> lexik/jwt-authentication-bundle ###
-/config/jwt/*.pem
+### /config/jwt/*.pem
 ###< lexik/jwt-authentication-bundle ###
