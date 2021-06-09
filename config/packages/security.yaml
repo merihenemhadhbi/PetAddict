@@ -41,3 +41,4 @@ security:
         - { path: ^/api/login, roles: IS_AUTHENTICATED_ANONYMOUSLY }
         - { path: ^/api/users, roles: IS_AUTHENTICATED_ANONYMOUSLY,methods: [POST]}
         - { path: ^/api/users, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api/adoption, roles: IS_AUTHENTICATED_FULLY,methods: [POST]}
