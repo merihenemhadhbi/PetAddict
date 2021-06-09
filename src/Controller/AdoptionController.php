@@ -41,9 +41,9 @@ class AdoptionController extends AbstractFOSRestController
                 $adoptions =  $this->adoptionRepository->findBy($criteria);
                 return $this->json($adoptions, Response::HTTP_OK);
             }
-            $page = isset($page) ? ($page - 1) * $size : 1;
-            $size = isset($size) ? $size : 8;
-            $adoptions = $this->adoptionRepository->findBy($criteria, null, $size, $size);
+            $page = isset($page) && $page > 0 ? $page : 1;
+            $offset = isset($size) ? ($page - 1) * $size : 0;
+            $adoptions = $this->adoptionRepository->findBy($criteria, null, isset($size) ? $size :  8,  $offset);
             return $this->json($adoptions, Response::HTTP_OK);
         }
 
