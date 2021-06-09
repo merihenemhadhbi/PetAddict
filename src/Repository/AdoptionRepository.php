@@ -11,6 +11,7 @@ use Doctrine\Persistence\ManagerRegistry;
  * @method Adoption|null findOneBy(array $criteria, array $orderBy = null)
  * @method Adoption[]    findAll()
  * @method Adoption[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ * @method Adoption[]    findPaged($page, $size)
  */
 class AdoptionRepository extends ServiceEntityRepository
 {
@@ -40,6 +41,9 @@ class AdoptionRepository extends ServiceEntityRepository
      */
     public function findPaged($page, $size)
     {
+        if ($page < 1) {
+            $page = 1;
+        }
         $offset = ($page - 1) * $size;
         return $this->createQueryBuilder('a')
             ->orderBy('a.createdAt', 'DESC')

@@ -3,6 +3,8 @@
 namespace App\Controller;
 
 use App\Entity\Adoption;
+use App\Repository\AdoptionRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\Controller\AbstractFOSRestController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
@@ -11,10 +13,13 @@ use Symfony\Component\Routing\Annotation\Route;
 class AdoptionController extends AbstractFOSRestController
 {
 
+    private $adoptionRepository;
+    private $entityManager;
 
-
-    public function __construct()
+    public function __construct(AdoptionRepository $repository, EntityManagerInterface $em)
     {
+        $this->adoptionRepository = $repository;
+        $this->entityManager = $em;
     }
 
     /**
@@ -22,20 +27,32 @@ class AdoptionController extends AbstractFOSRestController
      */
     public function findAll(Request $requst): Response
     {
-        $adoptionRepository = $this->getDoctrine()
-            ->getRepository(Adoption::class);
-
         $page = $requst->query->get('page');
         $size = $requst->query->get('size');
 
+        $title = $requst->query->get('title');
+        $animal = $requst->query->get('animal');
+        $createdAt = $requst->query->get('createdAt');
+        $description = $requst->query->get('description');
+
+        if (isset($title) || isset($animal) || isset($description) || isset($createdAt)) {
+            $criteria = $this->createCriteria($title, $description, $createdAt, $animal);
+            if (!isset($page) && !isset($size)) {
+                $adoptions =  $this->adoptionRepository->findBy($criteria);
+                return $this->json($adoptions, Response::HTTP_OK);
+            }
+            $page = isset($page) ? ($page - 1) * $size : 1;
+            $size = isset($size) ? $size : 8;
+            $adoptions = $this->adoptionRepository->findBy($criteria, null, $size, $size);
+            return $this->json($adoptions, Response::HTTP_OK);
+        }
 
         // if not paginated
         if (!isset($page) && !isset($size)) {
-            $adoptions = $adoptionRepository->findAll();
+            $adoptions = $this->adoptionRepository->findAll();
             return $this->json($adoptions, Response::HTTP_OK);
         }
-        $adoptions = $adoptionRepository->findPaged($page, $size);
-
+        $adoptions = $this->adoptionRepository->findPaged($page, $size);
         return $this->json($adoptions, Response::HTTP_OK);
     }
 
@@ -44,9 +61,7 @@ class AdoptionController extends AbstractFOSRestController
      */
     public function findOne($id): Response
     {
-        $adoptionRepository = $this->getDoctrine()
-            ->getRepository(Adoption::class);
-        $adoption = $adoptionRepository->find($id);
+        $adoption = $this->adoptionRepository->find($id);
         return $this->json($adoption, Response::HTTP_OK);
     }
 
@@ -55,12 +70,9 @@ class AdoptionController extends AbstractFOSRestController
      */
     public function delete($id): Response
     {
-        $adoptionRepository = $this->getDoctrine()->getRepository(Adoption::class);
-        $entityManager = $this->getDoctrine()->getManager();
-
-        $adoption = $adoptionRepository->find($id);
-        $entityManager->delete($adoption);
-        $entityManager->flush();
+        $adoption = $this->adoptionRepository->find($id);
+        $this->entityManager->remove($adoption);
+        $this->entityManager->flush();
         return $this->json($adoption, Response::HTTP_OK);
     }
 
@@ -69,15 +81,11 @@ class AdoptionController extends AbstractFOSRestController
      */
     public function update($id, Request $request): Response
     {
-        $adoptionRepository = $this->getDoctrine()
-            ->getRepository(Adoption::class);
-        $entityManager = $this->getDoctrine()->getManager();
         $data = json_decode($request->getContent(), true);
-        $adoption = $adoptionRepository->find($id);
+        $adoption = $this->adoptionRepository->find($id);
         $adoption = $this->adoptionDto($adoption, $data);
-
-        $entityManager->merge($adoption);
-        $entityManager->flush();
+        $this->entityManager->persist($adoption);
+        $this->entityManager->flush();
         return $this->json($adoption);
     }
 
@@ -86,14 +94,10 @@ class AdoptionController extends AbstractFOSRestController
      */
     public function create(Request $request): Response
     {
-
-        $entityManager = $this->getDoctrine()->getManager();
-
         $data = json_decode($request->getContent(), true);
-
         $adoption = $this->adoptionDto(new Adoption(), $data);
-        $entityManager->persist($adoption);
-        $entityManager->flush();
+        $this->entityManager->persist($adoption);
+        $this->entityManager->flush();
         return $this->json($adoption, Response::HTTP_CREATED);
     }
 
@@ -103,5 +107,23 @@ class AdoptionController extends AbstractFOSRestController
         $adoption->setDescription($data['description']);
         $adoption->setAnimal($data['animal']);
         return $adoption;
+    }
+
+    private function createCriteria($title, $description, $creationAt, $animal): array
+    {
+        $criteria = [];
+        if (isset($title)) {
+            $criteria['title'] = $title;
+        }
+        if (isset($description)) {
+            $criteria['description'] = $description;
+        }
+        if (isset($creationAt)) {
+            $criteria['creationAt'] = $creationAt;
+        }
+        if (isset($animal)) {
+            $criteria['animal'] = $animal;
+        }
+        return $criteria;
     }
 }

@@ -47,9 +47,7 @@ class Adoption
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $updatedBy;
-
-    
-    
+       
     /**
      * @ORM\Column(type="string", length=255)
      */
