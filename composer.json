@@ -12,6 +12,7 @@
         "doctrine/orm": "^2.9",
         "fakerphp/faker": "^1.14",
         "friendsofsymfony/rest-bundle": "^3.0",
+        "lexik/jwt-authentication-bundle": "^2.11",
         "nelmio/cors-bundle": "^2.1",
         "phpdocumentor/reflection-docblock": "^5.2",
         "symfony/console": "4.4.*",
@@ -21,6 +22,7 @@
         "symfony/property-access": "4.4.*",
         "symfony/property-info": "4.4.*",
         "symfony/proxy-manager-bridge": "4.4.*",
+        "symfony/security-bundle": "4.4.*",
         "symfony/serializer": "4.4.*",
         "symfony/web-server-bundle": "4.4.*",
         "symfony/yaml": "4.4.*"
