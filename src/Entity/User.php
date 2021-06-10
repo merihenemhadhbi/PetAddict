@@ -3,12 +3,15 @@
 namespace App\Entity;
 
 use App\Repository\UserRepository;
+use DateTime;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Symfony\Component\Serializer\Annotation\SerializedName;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
- * @ORM\Entity(repositoryClass=UserRepository::class)
+ * @ORM\Entity(repositoryClass=UserRepository::class) @ORM\HasLifecycleCallbacks
  */
 class User implements UserInterface
 {
@@ -62,17 +65,17 @@ class User implements UserInterface
     /**
      * @ORM\Column(type="boolean", nullable=true)
      */
-    private $isMailPublic;
+    private $isMailPublic = true;
 
     /**
      * @ORM\Column(type="boolean", nullable=true)
      */
-    private $isPhonePublic;
+    private $isPhonePublic = true;
 
     /**
      * @ORM\Column(type="boolean", nullable=true)
      */
-    private $allowNotification;
+    private $allowNotification = true;
 
     /**
      * @ORM\Column(type="datetime", nullable=true)
@@ -95,9 +98,19 @@ class User implements UserInterface
     private $updatedBy;
 
     /**
-     * @ORM\Column(type="string", length=255, nullable=true,columnDefinition="enum('Chat', 'Chien','Oiseau')")
+     * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $favoriteAnimal;
+
+    /**
+     * @ORM\OneToMany(targetEntity=Adoption::class, mappedBy="user")
+     */
+    private $adoptions;
+
+    public function __construct()
+    {
+        $this->adoptions = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -333,5 +346,49 @@ class User implements UserInterface
     public function eraseCredentials()
     {
         // If you store any temporary, sensitive data on the user, clear it here
+    }
+
+    /**
+     * @return Collection|Adoption[]
+     */
+    public function getAdoptions(): Collection
+    {
+        return $this->adoptions;
+    }
+
+    public function addAdoption(Adoption $adoption): self
+    {
+        if (!$this->adoptions->contains($adoption)) {
+            $this->adoptions[] = $adoption;
+            $adoption->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeAdoption(Adoption $adoption): self
+    {
+        if ($this->adoptions->removeElement($adoption)) {
+            // set the owning side to null (unless already changed)
+            if ($adoption->getUser() === $this) {
+                $adoption->setUser(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /** @ORM\PrePersist */
+    public function prePersist()
+    {
+        $this->createdAt = new DateTime();
+        $this->createdBy = "admin";
+    }
+
+    /** @ORM\PreUpdate */
+    public function preUpdate()
+    {
+        $this->updatedAt = new DateTime();
+        $this->updatedBy = $this->email;
     }
 }

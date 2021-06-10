@@ -5,6 +5,8 @@ namespace App\Entity;
 use App\Repository\AdoptionRepository;
 use DateTime;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\MaxDepth;
+
 
 /**
  * @ORM\Entity(repositoryClass=AdoptionRepository::class) @ORM\HasLifecycleCallbacks
@@ -52,6 +54,13 @@ class Adoption
      * @ORM\Column(type="string", length=255)
      */
     private $animal;
+
+    /**
+     * @MaxDepth(2)
+     * @ORM\ManyToOne(targetEntity=User::class, inversedBy="adoptions")
+     * @ORM\JoinColumn(nullable=true)
+     */
+    private $user;
 
     public function getId(): ?int
     {
@@ -129,21 +138,19 @@ class Adoption
 
         return $this;
     }
-
-  
-
+ 
     /** @ORM\PrePersist */
     public function prePersist()
     {
         $this->createdAt = new DateTime();
-        $this->createdBy = "admin";
+        $this->createdBy = $this->user->getUserName();
     }
 
     /** @ORM\PreUpdate */
     public function preUpdate()
     {
         $this->updatedAt = new DateTime();
-        $this->updatedBy = "admin";
+        $this->updatedBy = $this->user->getUserName();
     }
 
     public function getAnimal(): ?string
@@ -154,6 +161,18 @@ class Adoption
     public function setAnimal(string $animal): self
     {
         $this->animal = $animal;
+
+        return $this;
+    }
+
+    public function getUser(): ?User
+    {
+        return $this->user;
+    }
+
+    public function setUser(?User $user): self
+    {
+        $this->user = $user;
 
         return $this;
     }
