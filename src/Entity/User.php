@@ -107,9 +107,15 @@ class User implements UserInterface
      */
     private $adoptions;
 
+    /**
+     * @ORM\OneToMany(targetEntity=AdoptionRequest::class, mappedBy="user", orphanRemoval=true)
+     */
+    private $adoptionRequests;
+
     public function __construct()
     {
         $this->adoptions = new ArrayCollection();
+        $this->adoptionRequests = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -390,5 +396,35 @@ class User implements UserInterface
     {
         $this->updatedAt = new DateTime();
         $this->updatedBy = $this->email;
+    }
+
+    /**
+     * @return Collection|AdoptionRequest[]
+     */
+    public function getAdoptionRequests(): Collection
+    {
+        return $this->adoptionRequests;
+    }
+
+    public function addAdoptionRequest(AdoptionRequest $adoptionRequest): self
+    {
+        if (!$this->adoptionRequests->contains($adoptionRequest)) {
+            $this->adoptionRequests[] = $adoptionRequest;
+            $adoptionRequest->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeAdoptionRequest(AdoptionRequest $adoptionRequest): self
+    {
+        if ($this->adoptionRequests->removeElement($adoptionRequest)) {
+            // set the owning side to null (unless already changed)
+            if ($adoptionRequest->getUser() === $this) {
+                $adoptionRequest->setUser(null);
+            }
+        }
+
+        return $this;
     }
 }

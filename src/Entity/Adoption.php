@@ -4,6 +4,8 @@ namespace App\Entity;
 
 use App\Repository\AdoptionRepository;
 use DateTime;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\MaxDepth;
 
@@ -61,6 +63,16 @@ class Adoption
      * @ORM\JoinColumn(nullable=true)
      */
     private $user;
+
+    /**
+     * @ORM\OneToMany(targetEntity=AdoptionRequest::class, mappedBy="adoption", orphanRemoval=true)
+     */
+    private $adoptionRequests;
+
+    public function __construct()
+    {
+        $this->adoptionRequests = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -173,6 +185,36 @@ class Adoption
     public function setUser(?User $user): self
     {
         $this->user = $user;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|AdoptionRequest[]
+     */
+    public function getAdoptionRequests(): Collection
+    {
+        return $this->adoptionRequests;
+    }
+
+    public function addAdoptionRequest(AdoptionRequest $adoptionRequest): self
+    {
+        if (!$this->adoptionRequests->contains($adoptionRequest)) {
+            $this->adoptionRequests[] = $adoptionRequest;
+            $adoptionRequest->setAdoption($this);
+        }
+
+        return $this;
+    }
+
+    public function removeAdoptionRequest(AdoptionRequest $adoptionRequest): self
+    {
+        if ($this->adoptionRequests->removeElement($adoptionRequest)) {
+            // set the owning side to null (unless already changed)
+            if ($adoptionRequest->getAdoption() === $this) {
+                $adoptionRequest->setAdoption(null);
+            }
+        }
 
         return $this;
     }

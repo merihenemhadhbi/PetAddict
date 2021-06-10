@@ -2,7 +2,11 @@
 
 namespace App\Controller;
 
+use App\Entity\Adoption;
+use App\Entity\AdoptionRequest;
 use App\Entity\User;
+use App\Repository\AdoptionRepository;
+use App\Repository\AdoptionRequestRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -18,14 +22,18 @@ class UserController extends AbstractController
     private $entityManager;
     private $passwordEncoder;
     private $serializer;
+    private $adoptionRepo;
+    private $adoptionRequestRepo;
 
 
-    public function __construct(UserRepository $repository, EntityManagerInterface $em, UserPasswordEncoderInterface $passwordEncoder, SerializerInterface $serializer)
+    public function __construct(UserRepository $repository, AdoptionRepository $adoptionRepo, AdoptionRequestRepository $adoptionRequestRepo, EntityManagerInterface $em, UserPasswordEncoderInterface $passwordEncoder, SerializerInterface $serializer)
     {
         $this->userRepository = $repository;
         $this->entityManager = $em;
         $this->passwordEncoder = $passwordEncoder;
         $this->serializer = $serializer;
+        $this->adoptionRepo = $adoptionRepo;
+        $this->adoptionRequestRepo = $adoptionRequestRepo;
     }
 
 
@@ -105,6 +113,8 @@ class UserController extends AbstractController
         $user->setPassword("********");
         return new Response($this->handleCircularReference($user), Response::HTTP_CREATED);
     }
+
+  
 
     private function userDto(User $user, $data)
     {

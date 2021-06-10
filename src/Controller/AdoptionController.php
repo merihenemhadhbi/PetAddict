@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Adoption;
+use App\Entity\AdoptionRequest;
 use App\Repository\AdoptionRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -168,12 +169,30 @@ class AdoptionController extends AbstractFOSRestController
 
     function handleCircularReference($objectToSerialize)
     {
-        // Serialize your object in Json
         $jsonObject = $this->serializer->serialize($objectToSerialize, 'json', [
             'circular_reference_handler' => function ($object) {
                 return $object->getId();
             }
         ]);
         return $jsonObject;
+    }
+
+
+    /**
+     * @Route("/api/adoption/{id}/adopt", name="create_adoption_requests" , methods = "POST")
+     */
+    public function createAdoptionRequest($id): Response
+    {
+        $adoption = $this->adoptionRepository->find((int) $id);
+        if ($this->getUser() != null && $adoption != null) {
+            $adoptionRequest = new AdoptionRequest();
+            $adoptionRequest->setAdoption($adoption);
+            $adoptionRequest->setUser($this->getUser());
+        } else {
+            return new Response('Null adoption', Response::HTTP_FORBIDDEN);
+        }
+        $this->entityManager->persist($adoptionRequest);
+        $this->entityManager->flush();
+        return new Response($this->handleCircularReference($adoptionRequest), Response::HTTP_CREATED);
     }
 }
