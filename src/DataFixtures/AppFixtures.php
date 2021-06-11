@@ -4,6 +4,7 @@ namespace App\DataFixtures;
 
 use App\Enums\Animals;
 use App\Entity\Adoption;
+use App\Entity\Animal;
 use App\Entity\User;
 use App\Repository\UserRepository;
 use Doctrine\Bundle\FixturesBundle\Fixture;
@@ -14,12 +15,10 @@ use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 class AppFixtures extends Fixture
 {
     private $passwordEncoder;
-    private $userRepo;
 
-    function __construct(UserPasswordEncoderInterface $passwordEncoder, UserRepository $userRepo)
+    function __construct(UserPasswordEncoderInterface $passwordEncoder)
     {
         $this->passwordEncoder = $passwordEncoder;
-        $this->userRepo = $userRepo;
     }
     public function load(ObjectManager $manager)
     {
@@ -44,23 +43,39 @@ class AppFixtures extends Fixture
             $adoption = new Adoption();
             $adoption->setTitle($generator->sentence($nbWords = 6, $variableNbWords = true));
             $adoption->setDescription($generator->text);
-
+            $animal = new Animal();
+            $animal->setSexe($i % 2 == 0 ? 'femenin' : 'masculin');
+            $animal->setType($generator->word);
+            $animal->setNom($generator->firstName);
+            $animal->setAge($generator->randomNumber(1));
+            $animal->setCouleur($generator->colorName);
             if ($i % 5 == 0) {
-                $adoption->setAnimal(Animals::FISH);
+                $animal->setEspece(Animals::FISH);
+                $animal->setTaille('Petite');
                 $user->setFavoriteAnimal(Animals::FISH);
             } else if ($i % 4 == 0) {
-                $adoption->setAnimal(Animals::BIRD);
+                $animal->setEspece(Animals::BIRD);
+                $animal->setTaille('Petite');
+
                 $user->setFavoriteAnimal(Animals::BIRD);
             } else if ($i % 3 == 0) {
-                $adoption->setAnimal(Animals::CAT);
+                $animal->setEspece(Animals::CAT);
+                $animal->setTaille('Moyen');
+
                 $user->setFavoriteAnimal(Animals::CAT);
             } else if ($i % 2 == 0) {
-                $adoption->setAnimal(Animals::DOG);
+                $animal->setEspece(Animals::DOG);
+                $animal->setTaille('Grande');
+
                 $user->setFavoriteAnimal(Animals::DOG);
             } else {
-                $adoption->setAnimal(Animals::TURTLE);
+                $animal->setEspece(Animals::TURTLE);
+                $animal->setTaille('Moyen');
+
                 $user->setFavoriteAnimal(Animals::TURTLE);
             }
+            $adoption->setAnimal($animal);
+            $animal->setAdoption($adoption);
             $user->addAdoption($adoption);
             $manager->persist($adoption);
             $manager->persist($user);

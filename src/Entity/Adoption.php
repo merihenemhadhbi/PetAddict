@@ -51,11 +51,6 @@ class Adoption
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $updatedBy;
-       
-    /**
-     * @ORM\Column(type="string", length=255)
-     */
-    private $animal;
 
     /**
      * @MaxDepth(2)
@@ -68,6 +63,12 @@ class Adoption
      * @ORM\OneToMany(targetEntity=AdoptionRequest::class, mappedBy="adoption", orphanRemoval=true)
      */
     private $adoptionRequests;
+
+    /**
+     * @ORM\OneToOne(targetEntity=Animal::class, inversedBy="adoption", cascade={"persist", "remove"})
+     * @ORM\JoinColumn(nullable=false)
+     */
+    private $animal;
 
     public function __construct()
     {
@@ -150,7 +151,7 @@ class Adoption
 
         return $this;
     }
- 
+
     /** @ORM\PrePersist */
     public function prePersist()
     {
@@ -163,18 +164,6 @@ class Adoption
     {
         $this->updatedAt = new DateTime();
         $this->updatedBy = $this->user->getUserName();
-    }
-
-    public function getAnimal(): ?string
-    {
-        return $this->animal;
-    }
-
-    public function setAnimal(string $animal): self
-    {
-        $this->animal = $animal;
-
-        return $this;
     }
 
     public function getUser(): ?User
@@ -215,6 +204,18 @@ class Adoption
                 $adoptionRequest->setAdoption(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getAnimal(): ?Animal
+    {
+        return $this->animal;
+    }
+
+    public function setAnimal(Animal $animal): self
+    {
+        $this->animal = $animal;
 
         return $this;
     }

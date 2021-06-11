@@ -4,17 +4,15 @@ namespace App\Controller;
 
 use App\Entity\Adoption;
 use App\Entity\AdoptionRequest;
+use App\Entity\Animal;
 use App\Repository\AdoptionRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\Controller\AbstractFOSRestController;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Serializer\Encoder\JsonEncoder;
-use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
-use Symfony\Component\Serializer\Serializer;
+
 use Symfony\Component\Serializer\SerializerInterface;
 
 class AdoptionController extends AbstractFOSRestController
@@ -23,14 +21,12 @@ class AdoptionController extends AbstractFOSRestController
     private $adoptionRepository;
     private $entityManager;
     private $serializer;
-    private $userRepo;
 
-    public function __construct(AdoptionRepository $repository, EntityManagerInterface $em, SerializerInterface $serializer, UserRepository $userRepo)
+    public function __construct(AdoptionRepository $repository, EntityManagerInterface $em, SerializerInterface $serializer)
     {
         $this->adoptionRepository = $repository;
         $this->entityManager = $em;
         $this->serializer = $serializer;
-        $this->userRepo = $userRepo;
     }
 
     /**
@@ -135,10 +131,40 @@ class AdoptionController extends AbstractFOSRestController
     private function adoptionDto(Adoption $adoption, $data)
     {
         $adoption->setUser($this->getUser());
-        $adoption->setTitle($data['title']);
-        $adoption->setDescription($data['description']);
-        $adoption->setAnimal($data['animal']);
-        $adoption->setAnimal($data['animal']);
+        if (isset($data['title'])) {
+            $adoption->setTitle($data['title']);
+        }
+        if (isset($data['description'])) {
+            $adoption->setDescription($data['description']);
+        }
+        if (isset($data['animal'])) {
+            $animal = $adoption->getAnimal();
+            if ($animal == null) {
+                $animal = new Animal();
+                $animal->setAdoption($adoption);
+            }
+            if (isset($data['animal']['type'])) {
+                $animal->setType($data['animal']['type']);
+            }
+            if (isset($data['animal']['age'])) {
+                $animal->setAge($data['animal']['age']);
+            }
+            if (isset($data['animal']['couleur'])) {
+                $animal->setCouleur($data['animal']['couleur']);
+            }
+            if (isset($data['animal']['espece'])) {
+                $animal->setEspece($data['animal']['espece']);
+            }
+            if (isset($data['animal']['taille'])) {
+                $animal->setTaille($data['animal']['taille']);
+            }
+            if (isset($data['animal']['sexe'])) {
+                $animal->setSexe($data['animal']['sexe']);
+            }
+            if (isset($data['animal']['nom'])) {
+                $animal->setNom($data['animal']['nom']);
+            }
+        }
         return $adoption;
     }
 
@@ -155,7 +181,7 @@ class AdoptionController extends AbstractFOSRestController
             $criteria['creationAt'] = $creationAt;
         }
         if (isset($animal)) {
-            $criteria['animal'] = $animal;
+            $criteria['animal.espece'] = $animal;
         }
         if (isset($user_id)) {
             $criteria['user'] = $user_id;
