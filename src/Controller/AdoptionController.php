@@ -134,11 +134,7 @@ class AdoptionController extends AbstractFOSRestController
 
     private function adoptionDto(Adoption $adoption, $data)
     {
-        $user_id = $data['user']['id'];
-        if (isset($user_id)) {
-            $user = $this->userRepo->find((int) $user_id);
-            $adoption->setUser($user);
-        }
+        $adoption->setUser($this->getUser());
         $adoption->setTitle($data['title']);
         $adoption->setDescription($data['description']);
         $adoption->setAnimal($data['animal']);
