@@ -2,12 +2,14 @@
 
 namespace App\Controller;
 
+use App\Entity\Address;
 use App\Entity\Adoption;
 use App\Entity\AdoptionRequest;
 use App\Entity\User;
 use App\Repository\AdoptionRepository;
 use App\Repository\AdoptionRequestRepository;
 use App\Repository\UserRepository;
+use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -22,8 +24,7 @@ class UserController extends AbstractController
     private $entityManager;
     private $passwordEncoder;
     private $serializer;
-    private $adoptionRepo;
-    private $adoptionRequestRepo;
+
 
 
     public function __construct(UserRepository $repository, AdoptionRepository $adoptionRepo, AdoptionRequestRepository $adoptionRequestRepo, EntityManagerInterface $em, UserPasswordEncoderInterface $passwordEncoder, SerializerInterface $serializer)
@@ -108,23 +109,23 @@ class UserController extends AbstractController
             return $this->json("email or password is missing", Response::HTTP_FORBIDDEN);
         }
         $user = $this->UserDto(new User(), $data);
-        $this->entityManager->persist($user);
-        $this->entityManager->flush();
-        $user->setPassword("********");
-        return new Response($this->handleCircularReference($user), Response::HTTP_CREATED);
-    }
-
-  
-
-    private function userDto(User $user, $data)
-    {
-        $user->setEmail($data['email']);
         $user->setPassword(
             $this->passwordEncoder->encodePassword(
                 $user,
                 $data['password']
             )
         );
+        $this->entityManager->persist($user);
+        $this->entityManager->flush();
+        $user->setPassword("********");
+        return new Response($this->handleCircularReference($user), Response::HTTP_CREATED);
+    }
+
+
+
+    private function userDto(User $user, $data)
+    {
+        $user->setEmail($data['email']);       
         $user->eraseCredentials();
         if (isset($data['firstName'])) {
             $user->setFirstName($data['firstName']);
@@ -138,8 +139,13 @@ class UserController extends AbstractController
         if (isset($data['about'])) {
             $user->setAbout($data['about']);
         }
+        if (isset($data['sexe'])) {
+            $user->setSexe($data['sexe']);
+        }
         if (isset($data['birthDate'])) {
-            $user->setBirthDate($data['birthDate']);
+            $user->setBirthDate(
+                date_create_from_format('Y-m-d', $data['birthDate'])
+            );
         }
         if (isset($data['isMailPublic'])) {
             $user->setIsMailPublic($data['isMailPublic']);
@@ -152,6 +158,22 @@ class UserController extends AbstractController
         }
         if (isset($data['favoriteAnimal'])) {
             $user->setFavoriteAnimal($data['favoriteAnimal']);
+        }
+        if (isset($data['address'])) {
+            $address = $user->getAddress();
+            if ($address == null) {
+                $address = new Address();
+            }
+            if (isset($data['address']['ville'])) {
+                $address->setVille($data['address']['ville']);
+            }
+            if (isset($data['address']['municipality'])) {
+                $address->setMunicipality($data['address']['municipality']);
+            }
+            if (isset($data['address']['details'])) {
+                $address->setDetails($data['address']['details']);
+            }
+            $user->setAddress($address);
         }
         return $user;
     }

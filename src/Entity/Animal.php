@@ -57,7 +57,7 @@ class Animal
      */
     private $nom;
 
-      /**
+    /**
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $createdAt;

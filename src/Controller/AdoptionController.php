@@ -6,7 +6,6 @@ use App\Entity\Adoption;
 use App\Entity\AdoptionRequest;
 use App\Entity\Animal;
 use App\Repository\AdoptionRepository;
-use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\Controller\AbstractFOSRestController;
 use Symfony\Component\HttpFoundation\Response;
@@ -43,15 +42,23 @@ class AdoptionController extends AbstractFOSRestController
         $description = $requst->query->get('description');
         $user_id = $requst->query->get('user_id');
 
-        if (isset($title) || isset($animal) || isset($description) || isset($createdAt) || isset($user_id)) {
-            $criteria = $this->createCriteria($title, $description, $createdAt, $animal, $user_id);
+        if (
+            isset($title) && strlen($title) > 0 || isset($animal) && strlen($animal) > 0 ||
+            isset($description) && strlen($description) > 0 || isset($createdAt) && strlen($createdAt) > 0 || isset($user_id) && strlen($user_id) > 0
+        ) {
+            $criteria = $this->createCriteria($title, $description, $createdAt, $user_id);
             if (!isset($page) && !isset($size)) {
                 $adoptions =  $this->adoptionRepository->findBy($criteria);
                 return new Response($this->handleCircularReference($adoptions), Response::HTTP_OK);
             }
             $page = isset($page) && $page > 0 ? $page : 1;
             $offset = isset($size) ? ($page - 1) * $size : 0;
-            $adoptions = $this->adoptionRepository->findBy($criteria, null, isset($size) ? $size :  8,  $offset);
+
+            if (isset($animal)) {
+                $adoptions = $this->adoptionRepository->findByAnimal($criteria, $animal, null, isset($size) ? $size :  8,  $offset);
+            } else {
+                $adoptions = $this->adoptionRepository->findBy($criteria, null, isset($size) ? $size :  8,  $offset);
+            }
             return new Response($this->handleCircularReference($adoptions), Response::HTTP_OK);
         }
 
@@ -168,22 +175,19 @@ class AdoptionController extends AbstractFOSRestController
         return $adoption;
     }
 
-    private function createCriteria($title, $description, $creationAt, $animal, $user_id): array
+    private function createCriteria(string $title = null, $description = null, $creationAt = null, $user_id = null): array
     {
         $criteria = [];
-        if (isset($title)) {
+        if (isset($title) && strlen($title) > 0) {
             $criteria['title'] = $title;
         }
-        if (isset($description)) {
+        if (isset($description) && strlen($description) > 0) {
             $criteria['description'] = $description;
         }
-        if (isset($creationAt)) {
+        if (isset($creationAt) && strlen($creationAt) > 0) {
             $criteria['creationAt'] = $creationAt;
         }
-        if (isset($animal)) {
-            $criteria['animal.espece'] = $animal;
-        }
-        if (isset($user_id)) {
+        if (isset($user_id) && strlen($user_id) > 0) {
             $criteria['user'] = $user_id;
         }
         return $criteria;

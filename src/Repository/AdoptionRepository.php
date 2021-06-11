@@ -20,22 +20,29 @@ class AdoptionRepository extends ServiceEntityRepository
         parent::__construct($registry, Adoption::class);
     }
 
-    // /**
-    //  * @return Adoption[] Returns an array of Adoption objects
-    //  */
-    /*
-    public function findByExampleField($value)
+    /**
+     * @return Adoption[] Returns an array of Adoption objects
+     */
+    public function findByAnimal($criteria = null, string  $animal, array $orderBy = null, $limit = null, $offset = null)
     {
-        return $this->createQueryBuilder('a')
-            ->andWhere('a.exampleField = :val')
-            ->setParameter('val', $value)
-            ->orderBy('a.id', 'ASC')
-            ->setMaxResults(10)
+        $query =  $this->createQueryBuilder('a')
+            ->leftJoin('a.animal', 'b');
+        if (count($criteria) > 0 ) {
+            foreach ($criteria as $key => $value) {
+                $query->andWhere('a.' . $key . ' = :' . $key)
+                    ->setParameter('' . $key, $value);
+            }
+        }
+        return  $query->andWhere('b.espece = :espece')
+            ->setParameter('espece', $animal)
+            ->orderBy('a.id', 'DESC')
+            ->setFirstResult($offset)
+            ->setMaxResults($limit)
             ->getQuery()
-            ->getResult()
-        ;
+            ->getResult();
+        return [];
     }
-    */
+
     /**
      * @return Adoption[] Returns an array of Adoption objects
      */
