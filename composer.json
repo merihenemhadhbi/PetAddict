@@ -12,6 +12,7 @@
         "doctrine/orm": "^2.9",
         "fakerphp/faker": "^1.14",
         "friendsofsymfony/rest-bundle": "^3.0",
+        "gesdinet/jwt-refresh-token-bundle": "^0.12.0",
         "lexik/jwt-authentication-bundle": "^2.11",
         "nelmio/cors-bundle": "^2.1",
         "phpdocumentor/reflection-docblock": "^5.2",
