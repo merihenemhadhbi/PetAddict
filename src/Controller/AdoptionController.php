@@ -36,29 +36,23 @@ class AdoptionController extends AbstractFOSRestController
         $page = $requst->query->get('page');
         $size = $requst->query->get('size');
 
-        $title = $requst->query->get('title');
-        $animal = $requst->query->get('animal');
-        $createdAt = $requst->query->get('createdAt');
-        $description = $requst->query->get('description');
+        $espece = $requst->query->get('espece');
+        $type = $requst->query->get('type');
+        $ville = $requst->query->get('ville');
+        $municipality = $requst->query->get('municipality');
+        $taille = $requst->query->get('taille');
+        $sexe = $requst->query->get('sexe');
         $user_id = $requst->query->get('user_id');
 
         if (
-            isset($title) && strlen($title) > 0 || isset($animal) && strlen($animal) > 0 ||
-            isset($description) && strlen($description) > 0 || isset($createdAt) && strlen($createdAt) > 0 || isset($user_id) && strlen($user_id) > 0
+            isset($espece) && strlen($espece) > 0 || isset($type) && strlen($type) > 0 ||
+            isset($taille) && strlen($taille) > 0 || isset($sexe) && strlen($sexe) > 0 ||
+            isset($ville) && strlen($ville) > 0 || isset($municipality) && strlen($municipality) > 0 || isset($user_id) && strlen($user_id) > 0
         ) {
-            $criteria = $this->createCriteria($title, $description, $createdAt, $user_id);
-            if (!isset($page) && !isset($size)) {
-                $adoptions =  $this->adoptionRepository->findBy($criteria);
-                return new Response($this->handleCircularReference($adoptions), Response::HTTP_OK);
-            }
+            $criteria = $this->createCriteria($espece, $type, $taille, $sexe, $ville, $municipality, $user_id);
             $page = isset($page) && $page > 0 ? $page : 1;
             $offset = isset($size) ? ($page - 1) * $size : 0;
-
-            if (isset($animal)) {
-                $adoptions = $this->adoptionRepository->findByAnimal($criteria, $animal, null, isset($size) ? $size :  8,  $offset);
-            } else {
-                $adoptions = $this->adoptionRepository->findBy($criteria, null, isset($size) ? $size :  8,  $offset);
-            }
+            $adoptions = $this->adoptionRepository->findWithCriteria($criteria, null, isset($size) ? $size :  8,  $offset);
             return new Response($this->handleCircularReference($adoptions), Response::HTTP_OK);
         }
 
@@ -175,17 +169,27 @@ class AdoptionController extends AbstractFOSRestController
         return $adoption;
     }
 
-    private function createCriteria(string $title = null, $description = null, $creationAt = null, $user_id = null): array
+    private function createCriteria($espece = null, $type = null, $taille = null, $sexe = null, $ville = null, $municipality = null, $user_id = null): array
     {
+
         $criteria = [];
-        if (isset($title) && strlen($title) > 0) {
-            $criteria['title'] = $title;
+        if (isset($espece) && strlen($espece) > 0) {
+            $criteria['espece'] = $espece;
         }
-        if (isset($description) && strlen($description) > 0) {
-            $criteria['description'] = $description;
+        if (isset($type) && strlen($type) > 0) {
+            $criteria['type'] = $type;
         }
-        if (isset($creationAt) && strlen($creationAt) > 0) {
-            $criteria['creationAt'] = $creationAt;
+        if (isset($taille) && strlen($taille) > 0) {
+            $criteria['taille'] = $taille;
+        }
+        if (isset($sexe) && strlen($sexe) > 0) {
+            $criteria['sexe'] = $sexe;
+        }
+        if (isset($ville) && strlen($ville) > 0) {
+            $criteria['ville'] = $ville;
+        }
+        if (isset($municipality) && strlen($municipality) > 0) {
+            $criteria['municipality'] = $municipality;
         }
         if (isset($user_id) && strlen($user_id) > 0) {
             $criteria['user'] = $user_id;

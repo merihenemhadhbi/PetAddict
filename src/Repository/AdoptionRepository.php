@@ -2,8 +2,12 @@
 
 namespace App\Repository;
 
+use App\Entity\Address;
 use App\Entity\Adoption;
+use App\Entity\Animal;
+use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\Query\AST\Join;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -23,24 +27,76 @@ class AdoptionRepository extends ServiceEntityRepository
     /**
      * @return Adoption[] Returns an array of Adoption objects
      */
-    public function findByAnimal($criteria = null, string  $animal, array $orderBy = null, $limit = null, $offset = null)
+    public function findWithCriteria($criteria = null,  array $orderBy = null, $limit = null, $offset = null)
     {
-        $query =  $this->createQueryBuilder('a')
-            ->leftJoin('a.animal', 'b');
-        if (count($criteria) > 0 ) {
-            foreach ($criteria as $key => $value) {
-                $query->andWhere('a.' . $key . ' = :' . $key)
-                    ->setParameter('' . $key, $value);
+        $query =  $this->createQueryBuilder('a');
+        $joinB = false;
+        $joinC = false;
+        $joinD = false;
+        if (count($criteria) > 0) {
+            if (isset($criteria['espece']) || isset($criteria['type']) || isset($criteria['taille']) || isset($criteria['sexe'])) {
+                $joinB = true;
+
+                $query->innerJoin(
+                    Animal::class,    // Entity
+                    'b',               // Alias
+                    'WITH',        // Join type
+                    'b.id = a.animal' // Join columns
+                );
+                if (isset($criteria['espece'])) {
+                    $query->andWhere('b.espece = :espece')
+                        ->setParameter('espece', $criteria['espece']);
+                }
+                if (isset($criteria['type'])) {
+                    $query->andWhere('b.type = :type')
+                        ->setParameter('type', $criteria['type']);
+                }
+                if (isset($criteria['taille'])) {
+                    $query->andWhere('b.taille = :taille')
+                        ->setParameter('taille', $criteria['taille']);
+                }
+                if (isset($criteria['sexe'])) {
+                    $query->andWhere('b.sexe = :sexe')
+                        ->setParameter('sexe', $criteria['sexe']);
+                }
+            }
+            if (isset($criteria['ville']) || isset($criteria['municipality'])) {
+                $joinC = true;
+                $joinD = true;
+                $query->innerJoin(
+                    User::class,    // Entity
+                    'c',               // Alias
+                    'WITH',        // Join type
+                    'c.id = a.user' // Join columns
+                );
+                $query->innerJoin(
+                    Address::class,    // Entity
+                    'd',               // Alias
+                    'WITH',        // Join type
+                    'd.id = c.address' // Join columns
+                );
+                if (isset($criteria['ville'])) {
+                    $query->andWhere('d.ville = :ville')
+                        ->setParameter('ville', $criteria['ville']);
+                }
+                if (isset($criteria['municipality'])) {
+                    $query->andWhere('d.municipality = :municipality')
+                        ->setParameter('municipality', $criteria['municipality']);
+                }
+            }
+            $query->select('a');
+            if (isset($criteria['user_id'])) {
+                $query->andWhere('a.user = :user')
+                    ->setParameter('user', $criteria['user_id']);
             }
         }
-        return  $query->andWhere('b.espece = :espece')
-            ->setParameter('espece', $animal)
-            ->orderBy('a.id', 'DESC')
+
+
+        return  $query->orderBy('a.id', 'DESC')
             ->setFirstResult($offset)
             ->setMaxResults($limit)
             ->getQuery()
             ->getResult();
-        return [];
     }
 
     /**
