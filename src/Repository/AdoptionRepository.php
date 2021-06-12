@@ -30,13 +30,9 @@ class AdoptionRepository extends ServiceEntityRepository
     public function findWithCriteria($criteria = null,  array $orderBy = null, $limit = null, $offset = null)
     {
         $query =  $this->createQueryBuilder('a');
-        $joinB = false;
-        $joinC = false;
-        $joinD = false;
+       
         if (count($criteria) > 0) {
             if (isset($criteria['espece']) || isset($criteria['type']) || isset($criteria['taille']) || isset($criteria['sexe'])) {
-                $joinB = true;
-
                 $query->innerJoin(
                     Animal::class,
                     'b',
@@ -61,8 +57,6 @@ class AdoptionRepository extends ServiceEntityRepository
                 }
             }
             if (isset($criteria['ville']) || isset($criteria['municipality'])) {
-                $joinC = true;
-                $joinD = true;
                 $query->innerJoin(
                     User::class,
                     'c',
@@ -90,8 +84,6 @@ class AdoptionRepository extends ServiceEntityRepository
                     ->setParameter('user', $criteria['user_id']);
             }
         }
-
-
         return  $query->orderBy('a.id', 'DESC')
             ->setFirstResult($offset)
             ->setMaxResults($limit)
@@ -102,12 +94,8 @@ class AdoptionRepository extends ServiceEntityRepository
     /**
      * @return Adoption[] Returns an array of Adoption objects
      */
-    public function findPaged($page, $size)
-    {
-        if ($page < 1) {
-            $page = 1;
-        }
-        $offset = ($page - 1) * $size;
+    public function findPaged($offset, $size)
+    {        
         return $this->createQueryBuilder('a')
             ->orderBy('a.id', 'DESC')
             ->setFirstResult($offset)

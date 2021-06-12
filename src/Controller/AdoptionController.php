@@ -51,7 +51,7 @@ class AdoptionController extends AbstractFOSRestController
         ) {
             $criteria = $this->createCriteria($espece, $type, $taille, $sexe, $ville, $municipality, $user_id);
             $page = isset($page) && $page > 0 ? $page : 1;
-            $offset = isset($size) ? ($page - 1) * $size : 0;
+            $offset = isset($size) ? ($page - 1) * $size : ($page - 1) * 8;
             $adoptions = $this->adoptionRepository->findWithCriteria($criteria, null, isset($size) ? $size :  8,  $offset);
             return new Response($this->handleCircularReference($adoptions), Response::HTTP_OK);
         }
@@ -61,7 +61,9 @@ class AdoptionController extends AbstractFOSRestController
             $adoptions = $this->adoptionRepository->findAll();
             return new Response($this->handleCircularReference($adoptions), Response::HTTP_OK);
         }
-        $adoptions = $this->adoptionRepository->findPaged($page, $size);
+        $page = isset($page) && $page > 0 ? $page : 1;
+        $offset = isset($size) ? ($page - 1) * $size : ($page - 1) * 8;
+        $adoptions = $this->adoptionRepository->findPaged($offset, isset($size) ? $size :  8);
         return new Response($this->handleCircularReference($adoptions), Response::HTTP_OK);
     }
 
