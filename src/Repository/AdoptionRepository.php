@@ -2,8 +2,12 @@
 
 namespace App\Repository;
 
+use App\Entity\Address;
 use App\Entity\Adoption;
+use App\Entity\Animal;
+use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\Query\AST\Join;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -20,22 +24,81 @@ class AdoptionRepository extends ServiceEntityRepository
         parent::__construct($registry, Adoption::class);
     }
 
-    // /**
-    //  * @return Adoption[] Returns an array of Adoption objects
-    //  */
-    /*
-    public function findByExampleField($value)
+    /**
+     * @return Adoption[] Returns an array of Adoption objects
+     */
+    public function findWithCriteria($criteria = null,  array $orderBy = null, $limit = null, $offset = null)
     {
-        return $this->createQueryBuilder('a')
-            ->andWhere('a.exampleField = :val')
-            ->setParameter('val', $value)
-            ->orderBy('a.id', 'ASC')
-            ->setMaxResults(10)
+        $query =  $this->createQueryBuilder('a');
+        $joinB = false;
+        $joinC = false;
+        $joinD = false;
+        if (count($criteria) > 0) {
+            if (isset($criteria['espece']) || isset($criteria['type']) || isset($criteria['taille']) || isset($criteria['sexe'])) {
+                $joinB = true;
+
+                $query->innerJoin(
+                    Animal::class,
+                    'b',
+                    'WITH',
+                    'b.id = a.animal'
+                );
+                if (isset($criteria['espece'])) {
+                    $query->andWhere('b.espece = :espece')
+                        ->setParameter('espece', $criteria['espece']);
+                }
+                if (isset($criteria['type'])) {
+                    $query->andWhere('b.type = :type')
+                        ->setParameter('type', $criteria['type']);
+                }
+                if (isset($criteria['taille'])) {
+                    $query->andWhere('b.taille = :taille')
+                        ->setParameter('taille', $criteria['taille']);
+                }
+                if (isset($criteria['sexe'])) {
+                    $query->andWhere('b.sexe = :sexe')
+                        ->setParameter('sexe', $criteria['sexe']);
+                }
+            }
+            if (isset($criteria['ville']) || isset($criteria['municipality'])) {
+                $joinC = true;
+                $joinD = true;
+                $query->innerJoin(
+                    User::class,
+                    'c',
+                    'WITH',
+                    'c.id = a.user'
+                );
+                $query->innerJoin(
+                    Address::class,
+                    'd',
+                    'WITH',
+                    'd.id = c.address'
+                );
+                if (isset($criteria['ville'])) {
+                    $query->andWhere('d.ville = :ville')
+                        ->setParameter('ville', $criteria['ville']);
+                }
+                if (isset($criteria['municipality'])) {
+                    $query->andWhere('d.municipality = :municipality')
+                        ->setParameter('municipality', $criteria['municipality']);
+                }
+            }
+            $query->select('a');
+            if (isset($criteria['user_id'])) {
+                $query->andWhere('a.user = :user')
+                    ->setParameter('user', $criteria['user_id']);
+            }
+        }
+
+
+        return  $query->orderBy('a.id', 'DESC')
+            ->setFirstResult($offset)
+            ->setMaxResults($limit)
             ->getQuery()
-            ->getResult()
-        ;
+            ->getResult();
     }
-    */
+
     /**
      * @return Adoption[] Returns an array of Adoption objects
      */
