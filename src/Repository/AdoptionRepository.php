@@ -38,10 +38,10 @@ class AdoptionRepository extends ServiceEntityRepository
                 $joinB = true;
 
                 $query->innerJoin(
-                    Animal::class,    // Entity
-                    'b',               // Alias
-                    'WITH',        // Join type
-                    'b.id = a.animal' // Join columns
+                    Animal::class,
+                    'b',
+                    'WITH',
+                    'b.id = a.animal'
                 );
                 if (isset($criteria['espece'])) {
                     $query->andWhere('b.espece = :espece')
@@ -64,16 +64,16 @@ class AdoptionRepository extends ServiceEntityRepository
                 $joinC = true;
                 $joinD = true;
                 $query->innerJoin(
-                    User::class,    // Entity
-                    'c',               // Alias
-                    'WITH',        // Join type
-                    'c.id = a.user' // Join columns
+                    User::class,
+                    'c',
+                    'WITH',
+                    'c.id = a.user'
                 );
                 $query->innerJoin(
-                    Address::class,    // Entity
-                    'd',               // Alias
-                    'WITH',        // Join type
-                    'd.id = c.address' // Join columns
+                    Address::class,
+                    'd',
+                    'WITH',
+                    'd.id = c.address'
                 );
                 if (isset($criteria['ville'])) {
                     $query->andWhere('d.ville = :ville')
