@@ -18,16 +18,22 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Serializer\SerializerInterface;
 
+//cache
+use Symfony\Component\Cache\Adapter\FilesystemAdapter;
+use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Contracts\Cache\ItemInterface;
+
 class UserController extends AbstractController
 {
     private $userRepository;
     private $entityManager;
     private $passwordEncoder;
     private $serializer;
+    private $cache;
+    private $requestStack;
 
 
-
-    public function __construct(UserRepository $repository, AdoptionRepository $adoptionRepo, AdoptionRequestRepository $adoptionRequestRepo, EntityManagerInterface $em, UserPasswordEncoderInterface $passwordEncoder, SerializerInterface $serializer)
+    public function __construct(RequestStack $requestStack , UserRepository $repository, AdoptionRepository $adoptionRepo, AdoptionRequestRepository $adoptionRequestRepo, EntityManagerInterface $em, UserPasswordEncoderInterface $passwordEncoder, SerializerInterface $serializer)
     {
         $this->userRepository = $repository;
         $this->entityManager = $em;
@@ -35,6 +41,9 @@ class UserController extends AbstractController
         $this->serializer = $serializer;
         $this->adoptionRepo = $adoptionRepo;
         $this->adoptionRequestRepo = $adoptionRequestRepo;
+        $this->cache = new FilesystemAdapter();
+        $this->requestStack = $requestStack;
+
     }
 
 
@@ -43,12 +52,23 @@ class UserController extends AbstractController
      */
     public function findOne($id): Response
     {
-        $user = $this->userRepository->find($id);
-        if ($user == null) {
-            return new Response('User not found', Response::HTTP_NOT_FOUND);
-        }
-        $user->setPassword('********');
-        return new Response($this->handleCircularReference($user), Response::HTTP_OK);
+        return $this->cache->get('USER' . $id, function (ItemInterface $item) {
+            $requst = $this->requestStack->getCurrentRequest();
+            $user = $this->userRepository->find($requst->attributes->get('id'));
+            if ($user == null) {
+                $item->expiresAfter(1);
+                return new Response('User not found', Response::HTTP_NOT_FOUND);
+            }
+            $item->expiresAfter(3600);
+            $user->setPassword('********');
+            return new Response($this->handleCircularReference($user), Response::HTTP_OK);
+        });
+    }
+
+
+    function clean($string)
+    {
+        return preg_replace('/[^A-Za-z0-9\-]/', '', json_encode($string)); // Removes special chars.
     }
 
     /**
@@ -56,12 +76,15 @@ class UserController extends AbstractController
      */
     public function findByEmail($email): Response
     {
-        $user = $this->userRepository->findOneByEmail($email);
-        if ($user == null) {
-            return new Response('User not found', Response::HTTP_NOT_FOUND);
-        }
-        $user->setPassword('********');
-        return new Response($this->handleCircularReference($user), Response::HTTP_OK);
+        return $this->cache->get($this->clean('USER' . $email), function (ItemInterface $item) {
+            $requst = $this->requestStack->getCurrentRequest();
+            $user = $this->userRepository->findOneByEmail($requst->attributes->get('email'));
+            if ($user == null) {
+                return new Response('User not found', Response::HTTP_NOT_FOUND);
+            }
+            $user->setPassword('********');
+            return new Response($this->handleCircularReference($user), Response::HTTP_OK);
+        });
     }
 
 
@@ -77,6 +100,8 @@ class UserController extends AbstractController
         $this->entityManager->remove($user);
         $this->entityManager->flush();
         $user->setPassword("********");
+        $this->cache->delete('USER' . $id);
+        $this->cache->delete($this->clean('USER' . $user->getEmail()));
         return new Response($this->handleCircularReference($user), Response::HTTP_OK);
     }
 
@@ -96,6 +121,8 @@ class UserController extends AbstractController
         $user = $this->userDto($user, $data);
         $this->entityManager->persist($user);
         $this->entityManager->flush();
+        $this->cache->delete('USER' . $id);
+        $this->cache->delete($this->clean('USER' . $user->getEmail()));
         return new Response($this->handleCircularReference($user), Response::HTTP_OK);
     }
 
@@ -118,6 +145,7 @@ class UserController extends AbstractController
         $this->entityManager->persist($user);
         $this->entityManager->flush();
         $user->setPassword("********");
+        $this->cache->delete('USER' . $user->getId());
         return new Response($this->handleCircularReference($user), Response::HTTP_CREATED);
     }
 
@@ -125,7 +153,7 @@ class UserController extends AbstractController
 
     private function userDto(User $user, $data)
     {
-        $user->setEmail($data['email']);       
+        $user->setEmail($data['email']);
         $user->eraseCredentials();
         if (isset($data['firstName'])) {
             $user->setFirstName($data['firstName']);
