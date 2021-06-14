@@ -22,7 +22,9 @@ use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Contracts\Cache\ItemInterface;
-
+/**
+*@Route("/api/users")
+ */
 class UserController extends AbstractController
 {
     private $userRepository;
@@ -48,7 +50,7 @@ class UserController extends AbstractController
 
 
     /**
-     * @Route("/api/users/{id}", name="get_user" , methods = "GET")
+     * @Route("/{id}", name="get_user" , methods = "GET")
      */
     public function findOne($id): Response
     {
@@ -72,7 +74,7 @@ class UserController extends AbstractController
     }
 
     /**
-     * @Route("/api/users/user_by_email/{email}", name="get_user_by_email" , methods = "GET")
+     * @Route("/user_by_email/{email}", name="get_user_by_email" , methods = "GET")
      */
     public function findByEmail($email): Response
     {
@@ -89,7 +91,7 @@ class UserController extends AbstractController
 
 
     /**
-     * @Route("/api/users/{id}", name="delete_user" , methods = "DELETE")
+     * @Route("/{id}", name="delete_user" , methods = "DELETE")
      */
     public function delete($id): Response
     {
@@ -106,7 +108,7 @@ class UserController extends AbstractController
     }
 
     /**
-     * @Route("/api/users/{id}", name="update_user" , methods = "PUT")
+     * @Route("/{id}", name="update_user" , methods = "PUT")
      */
     public function update($id, Request $request): Response
     {
@@ -127,7 +129,7 @@ class UserController extends AbstractController
     }
 
     /**
-     * @Route("/api/users", name="create_user" , methods = "POST")
+     * @Route("/", name="create_user" , methods = "POST")
      */
     public function create(Request $request): Response
     {

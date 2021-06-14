@@ -6,6 +6,7 @@ use App\Entity\Adoption;
 use App\Entity\AdoptionRequest;
 use App\Entity\Animal;
 use App\Repository\AdoptionRepository;
+use App\Repository\AnimalRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\Controller\AbstractFOSRestController;
 use Symfony\Component\HttpFoundation\Response;
@@ -30,9 +31,10 @@ class AdoptionController extends AbstractFOSRestController
     private $cache;
     private $collectionCache;
     private $requestStack;
+    private $animalRepo;
 
 
-    public function __construct(AdoptionRepository $repository, EntityManagerInterface $em, SerializerInterface $serializer, RequestStack $requestStack)
+    public function __construct(AdoptionRepository $repository, EntityManagerInterface $em, SerializerInterface $serializer, RequestStack $requestStack, AnimalRepository $animalRepo)
     {
         $this->cache = new FilesystemAdapter();
         $this->collectionCache = new FilesystemAdapter();
@@ -40,6 +42,7 @@ class AdoptionController extends AbstractFOSRestController
         $this->adoptionRepository = $repository;
         $this->entityManager = $em;
         $this->serializer = $serializer;
+        $this->animalRepo = $animalRepo;
     }
     function clean($string)
     {
@@ -260,5 +263,14 @@ class AdoptionController extends AbstractFOSRestController
         $this->entityManager->persist($adoptionRequest);
         $this->entityManager->flush();
         return new Response($this->handleCircularReference($adoptionRequest), Response::HTTP_CREATED);
+    }
+
+    /**
+     * @Route("/api/animal", name="get_animals" , methods = "GET")
+     */
+    public function getAllAnimals(): Response
+    {
+        $animals = $this->animalRepo->findAll();
+        return new Response($this->handleCircularReference($animals), Response::HTTP_CREATED);
     }
 }
