@@ -2,12 +2,10 @@
 
 namespace App\Entity;
 
-use App\Repository\AdoptionRepository;
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Serializer\Annotation\MaxDepth;
 
 
 /**
@@ -53,7 +51,6 @@ class Adoption
     private $updatedBy;
 
     /**
-     * @MaxDepth(2)
      * @ORM\ManyToOne(targetEntity=User::class, inversedBy="adoptions")
      * @ORM\JoinColumn(nullable=true)
      */

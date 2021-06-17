@@ -22,8 +22,9 @@ use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Contracts\Cache\ItemInterface;
+
 /**
-*@Route("/api/users")
+ *@Route("/api/users/")
  */
 class UserController extends AbstractController
 {
@@ -35,7 +36,7 @@ class UserController extends AbstractController
     private $requestStack;
 
 
-    public function __construct(RequestStack $requestStack , UserRepository $repository, AdoptionRepository $adoptionRepo, AdoptionRequestRepository $adoptionRequestRepo, EntityManagerInterface $em, UserPasswordEncoderInterface $passwordEncoder, SerializerInterface $serializer)
+    public function __construct(RequestStack $requestStack, UserRepository $repository, AdoptionRepository $adoptionRepo, AdoptionRequestRepository $adoptionRequestRepo, EntityManagerInterface $em, UserPasswordEncoderInterface $passwordEncoder, SerializerInterface $serializer)
     {
         $this->userRepository = $repository;
         $this->entityManager = $em;
@@ -45,12 +46,11 @@ class UserController extends AbstractController
         $this->adoptionRequestRepo = $adoptionRequestRepo;
         $this->cache = new FilesystemAdapter();
         $this->requestStack = $requestStack;
-
     }
 
 
     /**
-     * @Route("/{id}", name="get_user" , methods = "GET")
+     * @Route("{id}", name="get_user" , methods = "GET")
      */
     public function findOne($id): Response
     {
@@ -68,13 +68,23 @@ class UserController extends AbstractController
     }
 
 
+    /**
+     * @Route("", name="get_all_users" , methods = "GET")
+     */
+    public function findAll(): Response
+    {
+        $users = $this->userRepository->findAll();
+        return new Response($this->handleCircularReference($users), Response::HTTP_OK);
+    }
+
+
     function clean($string)
     {
         return preg_replace('/[^A-Za-z0-9\-]/', '', json_encode($string)); // Removes special chars.
     }
 
     /**
-     * @Route("/user_by_email/{email}", name="get_user_by_email" , methods = "GET")
+     * @Route("user_by_email/{email}", name="get_user_by_email" , methods = "GET")
      */
     public function findByEmail($email): Response
     {
@@ -91,7 +101,7 @@ class UserController extends AbstractController
 
 
     /**
-     * @Route("/{id}", name="delete_user" , methods = "DELETE")
+     * @Route("{id}", name="delete_user" , methods = "DELETE")
      */
     public function delete($id): Response
     {
@@ -108,7 +118,7 @@ class UserController extends AbstractController
     }
 
     /**
-     * @Route("/{id}", name="update_user" , methods = "PUT")
+     * @Route("{id}", name="update_user" , methods = "PUT")
      */
     public function update($id, Request $request): Response
     {
@@ -129,7 +139,7 @@ class UserController extends AbstractController
     }
 
     /**
-     * @Route("/", name="create_user" , methods = "POST")
+     * @Route("", name="create_user" , methods = "POST")
      */
     public function create(Request $request): Response
     {
