@@ -85,4 +85,16 @@ class InboxController extends AbstractController
         $this->em->flush();
         return new Response($this->serializer->serialize($message, 'json'), Response::HTTP_OK);
     }
+
+    /**
+     * @Route("/{id}/read", name="read_message" , methods = "POST")
+     */
+    public function readMessage($id): Response
+    {
+        $message = $this->messageRepo->find($id);
+        $message->setVu(true);
+        $this->em->persist($message);
+        $this->em->flush();
+        return new Response($this->serializer->serialize($message, 'json'), Response::HTTP_OK);
+    }
 }
