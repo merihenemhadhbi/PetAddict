@@ -28,17 +28,11 @@ class AdoptionController extends AbstractFOSRestController
     private $adoptionRepository;
     private $entityManager;
     private $serializer;
-    private $cache;
-    private $collectionCache;
-    private $requestStack;
     private $animalRepo;
 
 
-    public function __construct(AdoptionRepository $repository, EntityManagerInterface $em, SerializerInterface $serializer, RequestStack $requestStack, AnimalRepository $animalRepo)
+    public function __construct(AdoptionRepository $repository, EntityManagerInterface $em, SerializerInterface $serializer, AnimalRepository $animalRepo)
     {
-        $this->cache = new FilesystemAdapter();
-        $this->collectionCache = new FilesystemAdapter();
-        $this->requestStack = $requestStack;
         $this->adoptionRepository = $repository;
         $this->entityManager = $em;
         $this->serializer = $serializer;
@@ -54,44 +48,40 @@ class AdoptionController extends AbstractFOSRestController
     public function findAll(Request $requst): Response
     {
 
-        return $this->collectionCache->get($this->clean($requst->getUri()), function (ItemInterface $item) {
-            $item->expiresAfter(3600);
-            $requst = $this->requestStack->getCurrentRequest();
-            $page = $requst->query->get('page');
-            $size = $requst->query->get('size');
+        $page = $requst->query->get('page');
+        $size = $requst->query->get('size');
 
-            $espece = $requst->query->get('espece');
-            $type = $requst->query->get('type');
-            $ville = $requst->query->get('ville');
-            $municipality = $requst->query->get('municipality');
-            $taille = $requst->query->get('taille');
-            $sexe = $requst->query->get('sexe');
-            $user_id = $requst->query->get('user_id');
+        $espece = $requst->query->get('espece');
+        $type = $requst->query->get('type');
+        $ville = $requst->query->get('ville');
+        $municipality = $requst->query->get('municipality');
+        $taille = $requst->query->get('taille');
+        $sexe = $requst->query->get('sexe');
+        $user_id = $requst->query->get('user_id');
 
-            if (
-                isset($espece) && strlen($espece) > 0 || isset($type) && strlen($type) > 0 ||
-                isset($taille) && strlen($taille) > 0 || isset($sexe) && strlen($sexe) > 0 ||
-                isset($ville) && strlen($ville) > 0 || isset($municipality) && strlen($municipality) > 0 || isset($user_id) && strlen($user_id) > 0
-            ) {
-                $criteria = $this->createCriteria($espece, $type, $taille, $sexe, $ville, $municipality, $user_id);
-                $page = isset($page) && $page > 0 ? $page : 1;
-                $offset = isset($size) ? ($page - 1) * $size : ($page - 1) * 8;
-                $criteria['page'] = $page;
-                $criteria['size'] = isset($size) ? $size : 6;
-                $adoptions = $this->adoptionRepository->findWithCriteria($criteria, null, isset($size) ? $size :  8,  $offset);
-                return new Response($this->handleCircularReference($adoptions), Response::HTTP_OK);
-            }
-
-            // if not paginated
-            if (!isset($page) && !isset($size)) {
-                $adoptions = $this->adoptionRepository->findAll();
-                return new Response($this->handleCircularReference($adoptions), Response::HTTP_OK);
-            }
+        if (
+            isset($espece) && strlen($espece) > 0 || isset($type) && strlen($type) > 0 ||
+            isset($taille) && strlen($taille) > 0 || isset($sexe) && strlen($sexe) > 0 ||
+            isset($ville) && strlen($ville) > 0 || isset($municipality) && strlen($municipality) > 0 || isset($user_id) && strlen($user_id) > 0
+        ) {
+            $criteria = $this->createCriteria($espece, $type, $taille, $sexe, $ville, $municipality, $user_id);
             $page = isset($page) && $page > 0 ? $page : 1;
             $offset = isset($size) ? ($page - 1) * $size : ($page - 1) * 8;
-            $adoptions = $this->adoptionRepository->findPaged($offset, isset($size) ? $size :  8);
+            $criteria['page'] = $page;
+            $criteria['size'] = isset($size) ? $size : 6;
+            $adoptions = $this->adoptionRepository->findWithCriteria($criteria, null, isset($size) ? $size :  8,  $offset);
             return new Response($this->handleCircularReference($adoptions), Response::HTTP_OK);
-        });
+        }
+
+        // if not paginated
+        if (!isset($page) && !isset($size)) {
+            $adoptions = $this->adoptionRepository->findAll();
+            return new Response($this->handleCircularReference($adoptions), Response::HTTP_OK);
+        }
+        $page = isset($page) && $page > 0 ? $page : 1;
+        $offset = isset($size) ? ($page - 1) * $size : ($page - 1) * 8;
+        $adoptions = $this->adoptionRepository->findPaged($offset, isset($size) ? $size :  8);
+        return new Response($this->handleCircularReference($adoptions), Response::HTTP_OK);
     }
 
 
@@ -109,16 +99,11 @@ class AdoptionController extends AbstractFOSRestController
      */
     public function findOne($id): Response
     {
-        return $this->cache->get('ADOPTION' . $id, function (ItemInterface $item) {
-            $requst = $this->requestStack->getCurrentRequest();
-            $adoption = $this->adoptionRepository->find($requst->attributes->get('id'));
-            if ($adoption == null) {
-                $item->expiresAfter(1);
-                return new Response('Adoption not found', Response::HTTP_NOT_FOUND);
-            }
-            $item->expiresAfter(3600);
-            return new Response($this->handleCircularReference($adoption), Response::HTTP_OK);
-        });
+        $adoption = $this->adoptionRepository->find($id);
+        if ($adoption == null) {
+            return new Response('Adoption not found', Response::HTTP_NOT_FOUND);
+        }
+        return new Response($this->handleCircularReference($adoption), Response::HTTP_OK);
     }
 
     /**
@@ -132,8 +117,6 @@ class AdoptionController extends AbstractFOSRestController
         }
         $this->entityManager->remove($adoption);
         $this->entityManager->flush();
-        $this->cache->delete('ADOPTION' . $id);
-        $this->collectionCache->clear();
         return new Response($this->handleCircularReference($adoption), Response::HTTP_OK);
     }
 
@@ -150,8 +133,6 @@ class AdoptionController extends AbstractFOSRestController
         $adoption = $this->adoptionDto($adoption, $data);
         $this->entityManager->persist($adoption);
         $this->entityManager->flush();
-        $this->cache->delete('ADOPTION' . $id);
-        $this->collectionCache->clear();
         return new Response($this->handleCircularReference($adoption), Response::HTTP_OK);
     }
 
@@ -164,7 +145,6 @@ class AdoptionController extends AbstractFOSRestController
         $adoption = $this->adoptionDto(new Adoption(), $data);
         $this->entityManager->persist($adoption);
         $this->entityManager->flush();
-        $this->collectionCache->clear();
         return new Response($this->handleCircularReference($adoption), Response::HTTP_CREATED);
     }
 
