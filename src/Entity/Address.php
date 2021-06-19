@@ -7,6 +7,7 @@ use DateTime;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
+ * @ORM\Cache(usage="NONSTRICT_READ_WRITE", region="animals_region")
  * @ORM\Entity(repositoryClass=AddressRepository::class) @ORM\HasLifecycleCallbacks
  */
 class Address

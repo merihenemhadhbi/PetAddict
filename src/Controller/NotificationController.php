@@ -38,9 +38,9 @@ class NotificationController extends AbstractController
     {
         $user_id = $this->getuser()->getEmail();
         $allUserNotifications = $this->notificationRepo->findByToUser($user_id);
-        return new Response($this->serializer->serialize($allUserNotifications, 'json'), Response::HTTP_OK);
+        return new Response($this->serializer->serialize(array_reverse($allUserNotifications), 'json'), Response::HTTP_OK);
     }
-   
+
     /**
      * @Route("", name="send_notification" , methods = "POST")
      */
@@ -50,6 +50,7 @@ class NotificationController extends AbstractController
         $fromUser = $this->getuser()->getEmail();
         $notification = new Notification();
         $notification->setBody($data['body']);
+        $notification->setRoute($data['route']);
         $notification->setToUser($data['toUser']);
         $notification->setFromUser($fromUser);
         $this->em->persist($notification);

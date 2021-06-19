@@ -9,6 +9,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 
 /**
+ * @ORM\Cache(usage="NONSTRICT_READ_WRITE", region="animals_region")
  * @ORM\Entity(repositoryClass=AdoptionRepository::class) @ORM\HasLifecycleCallbacks
  */
 class Adoption

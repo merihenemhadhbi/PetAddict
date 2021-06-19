@@ -6,6 +6,7 @@ use Doctrine\ORM\Mapping as ORM;
 use DateTime;
 
 /**
+ * @ORM\Cache(usage="READ_ONLY", region="messages_region")
  * @ORM\Entity(repositoryClass=MessageRepository::class)  @ORM\HasLifecycleCallbacks
  */
 class Message

@@ -29,7 +29,7 @@ class MessageRepository extends ServiceEntityRepository
             ->setParameter('from', $value)
             ->orWhere('m.toUser = :to')
             ->setParameter('to', $value)
-            ->orderBy('m.createdAt', 'DESC')
+            ->orderBy('m.id', 'DESC')
             ->getQuery()
             ->getResult();
     }

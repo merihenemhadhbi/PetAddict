@@ -7,6 +7,7 @@ use DateTime;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
+ * @ORM\Cache(usage="READ_ONLY", region="notifications_region")
  * @ORM\Entity(repositoryClass=NotificationRepository::class) @ORM\HasLifecycleCallbacks
  */
 class Notification
@@ -47,6 +48,11 @@ class Notification
      * @ORM\Column(type="boolean")
      */
     private $vu = false;
+
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $route;
 
     public function getId(): ?int
     {
@@ -135,6 +141,18 @@ class Notification
      public function setVu(bool $vu): self
      {
          $this->vu = $vu;
+
+         return $this;
+     }
+
+     public function getRoute(): ?string
+     {
+         return $this->route;
+     }
+
+     public function setRoute(?string $route): self
+     {
+         $this->route = $route;
 
          return $this;
      }

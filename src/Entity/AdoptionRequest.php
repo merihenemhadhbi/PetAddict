@@ -7,6 +7,7 @@ use App\Repository\AdoptionRequestRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
+ * @ORM\Cache(usage="NONSTRICT_READ_WRITE", region="animals_region")
  * @ORM\Entity(repositoryClass=AdoptionRequestRepository::class) @ORM\HasLifecycleCallbacks
  */
 class AdoptionRequest

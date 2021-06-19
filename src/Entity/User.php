@@ -11,6 +11,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
+ * @ORM\Cache
  * @ORM\Entity(repositoryClass=UserRepository::class) @ORM\HasLifecycleCallbacks
  */
 class User implements UserInterface
