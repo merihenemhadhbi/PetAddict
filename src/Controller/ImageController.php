@@ -41,6 +41,18 @@ class ImageController extends AbstractController
         return new Response($this->serializer->serialize($image, 'json'), Response::HTTP_OK);
     }
 
+     /**
+     * @Route("", name="get_all_image" , methods = "GET")
+     */
+    public function getAllImages(): Response
+    {
+        $images = $this->imageRepo->findAll();       
+        foreach($images as $image){
+            $image->setBytes(stream_get_contents($image->getBytes()));
+        }
+        return new Response($this->serializer->serialize($images, 'json'), Response::HTTP_OK);
+    }
+
     /**
      * @Route("{id}", name="update_image" , methods = "PUT")
      */
@@ -53,7 +65,6 @@ class ImageController extends AbstractController
         $image->setUpdatedBy($user);
         $this->em->persist($image);
         $this->em->flush();
-        $image->setBytes(stream_get_contents($image->getBytes()));
         return new Response($this->serializer->serialize($image, 'json'), Response::HTTP_OK);
     }
 
