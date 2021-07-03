@@ -6,6 +6,7 @@ use App\Entity\Adoption;
 use App\Entity\AdoptionRequest;
 use App\Entity\Animal;
 use App\Repository\AdoptionRepository;
+use App\Repository\AdoptionRequestRepository;
 use App\Repository\AnimalRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use FOS\RestBundle\Controller\AbstractFOSRestController;
@@ -29,14 +30,16 @@ class AdoptionController extends AbstractFOSRestController
     private $entityManager;
     private $serializer;
     private $animalRepo;
+    private $adoptionRequestRepository;
 
 
-    public function __construct(AdoptionRepository $repository, EntityManagerInterface $em, SerializerInterface $serializer, AnimalRepository $animalRepo)
+    public function __construct(AdoptionRequestRepository $adoptionRequestRepository,AdoptionRepository $repository, EntityManagerInterface $em, SerializerInterface $serializer, AnimalRepository $animalRepo)
     {
         $this->adoptionRepository = $repository;
         $this->entityManager = $em;
         $this->serializer = $serializer;
         $this->animalRepo = $animalRepo;
+        $this->adoptionRequestRepository = $adoptionRequestRepository;
     }
     function clean($string)
     {
@@ -240,6 +243,31 @@ class AdoptionController extends AbstractFOSRestController
         } else {
             return new Response('Null adoption', Response::HTTP_FORBIDDEN);
         }
+        $this->entityManager->persist($adoptionRequest);
+        $this->entityManager->flush();
+        return new Response($this->handleCircularReference($adoptionRequest), Response::HTTP_CREATED);
+    }
+
+    
+    /**
+     * @Route("/api/adoptionRequest/{id}/accept", name="accept_adoption_request" , methods = "POST")
+     */
+    public function acceptAdoptionRequest($id): Response
+    {
+        $adoptionRequest = $this->adoptionRequestRepository->find((int) $id);
+        $adoptionRequest->setStatus("ACCEPTED");
+        $this->entityManager->persist($adoptionRequest);
+        $this->entityManager->flush();
+        return new Response($this->handleCircularReference($adoptionRequest), Response::HTTP_CREATED);
+    }
+
+     /**
+     * @Route("/api/adoptionRequest/{id}/reject", name="reject_adoption_request" , methods = "POST")
+     */
+    public function rejectAdoptionRequest($id): Response
+    {
+        $adoptionRequest = $this->adoptionRequestRepository->find((int) $id);
+        $adoptionRequest->setStatus("REJECTED");
         $this->entityManager->persist($adoptionRequest);
         $this->entityManager->flush();
         return new Response($this->handleCircularReference($adoptionRequest), Response::HTTP_CREATED);
