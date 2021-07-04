@@ -273,6 +273,30 @@ class AdoptionController extends AbstractFOSRestController
         return new Response($this->handleCircularReference($adoptionRequest), Response::HTTP_CREATED);
     }
 
+      /**
+     * @Route("/api/adoptionRequest/{id}/cancel", name="cancel_adoption_request" , methods = "POST")
+     */
+    public function cancelAdoptionRequest($id): Response
+    {
+        $adoptionRequest = $this->adoptionRequestRepository->find((int) $id);
+        $adoptionRequest->setStatus("CANCELED");
+        $this->entityManager->persist($adoptionRequest);
+        $this->entityManager->flush();
+        return new Response($this->handleCircularReference($adoptionRequest), Response::HTTP_CREATED);
+    }
+
+      /**
+     * @Route("/api/adoptionRequest/{id}/reopen", name="reopen_adoption_request" , methods = "POST")
+     */
+    public function reopenAdoptionRequest($id): Response
+    {
+        $adoptionRequest = $this->adoptionRequestRepository->find((int) $id);
+        $adoptionRequest->setStatus("CREATED");
+        $this->entityManager->persist($adoptionRequest);
+        $this->entityManager->flush();
+        return new Response($this->handleCircularReference($adoptionRequest), Response::HTTP_CREATED);
+    }
+
     /**
      * @Route("/api/animal", name="get_animals" , methods = "GET")
      */
